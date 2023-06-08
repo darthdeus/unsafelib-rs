@@ -47,7 +47,11 @@ static IS_INITIALIZED: AtomicBool = AtomicBool::new(false);
 /// thread raylib was initialized from. This is useful for architectures like macos
 /// where cocoa can only be called from one thread.
 #[derive(Clone, Debug)]
-pub struct RaylibThread(PhantomData<*const ()>);
+pub struct RaylibThread(
+    // There's no reason to have this pub since you could just call `unsafelib`, but ... more
+    // freedom?
+    pub PhantomData<*const ()>,
+);
 
 /// The main interface into the Raylib API.
 ///
@@ -57,9 +61,23 @@ pub struct RaylibThread(PhantomData<*const ()>);
 /// [`RaylibBuilder`]: struct.RaylibBuilder.html
 /// [`init`]: fn.init.html
 #[derive(Debug)]
-pub struct RaylibHandle(()); // inner field is private, preventing manual construction
+pub struct RaylibHandle(
+    // The original comment said "inner field is private, preventing manual construction" but we
+    // don't do that here ... feel free to construct manually. Or just call `unsafelib`, it'll work
+    // either way.
+    pub (),
+);
 
-impl Drop for RaylibHandle {
+/// For extra comfy handles just call this.
+pub fn unsafelib() -> (RaylibHandle, RaylibThread) {
+    (RaylibHandle(()), RaylibThread(PhantomData))
+}
+
+// Since we just create RaylibHandle wherever we want we need to have something else
+// to deinit the library. This is all the cleanup you need.
+pub struct DearRaylibIKnowWhatImDoing;
+
+impl Drop for DearRaylibIKnowWhatImDoing {
     fn drop(&mut self) {
         if IS_INITIALIZED.load(Ordering::Relaxed) {
             unsafe {

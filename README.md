@@ -1,3 +1,27 @@
+# Unsafelib is a fork of raylib-rs with more fun
+
+Ever wanted to just have globals and not worry about `Send`/`Sync` ivory tower safety? I got you.
+
+This is how we initialize raylib now:
+
+```rust
+let _handle = DearRaylibIKnowWhatImDoing;
+let (mut rl, thread) = raylib::init().size(640, 480).title("Make raylib-rs fun again :)").build();
+// use rl and thread as you would normally
+
+/// ...
+
+// got tired of passing rl/thread around? NO PROBLEM!
+// just call `unsafelib()` and keep having fun
+let (mut rl, thread) = unsafelib();
+
+let mut d = rl.begin_drawing(&thread);
+
+d.clear_background(Color::WHITE);
+d.draw_text(":)", x, y, 20, Color::BLACK);
+
+```
+
 # Remember to fix the examples befor creating a pullrequest, also rename the branch to 2.5.0
 ![logo](logo/raylib-rust_256x256.png)
 
